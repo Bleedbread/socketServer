@@ -1,3 +1,6 @@
+const Chat = require("../Models/chat")
+const chatController ={}
+
 chatController.saveChat = async (message, user) => {
     try {
       const newMessage = new Chat({
@@ -16,4 +19,5 @@ chatController.saveChat = async (message, user) => {
       console.error("Error saving message:", error);
     }
   };
-  
+
+module.exports = chatController;
