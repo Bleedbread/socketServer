@@ -11,7 +11,7 @@ module.exports = function (io) {
     socket.on("login", async (userName, cb) => {
       try {
         const user = await userController.saveUser(userName, socket.id);
-        console.log(`${user.name}is connected`);
+        console.log(`${user.name} is connected`);
         cb({ok:true,data:user});
       }
       catch(error){
