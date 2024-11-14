@@ -46,25 +46,42 @@ module.exports = function (io) {
     });
     
     //방 나가기 설정
-    socket.on("leaveRoom", async (_, cb) => {
+    socket.on("leaveRoom", async (rid, cb) => {
       try {
-        const user = await checkUser(socket.id);
-        await roomController.leaveRoom(user);
-        const leaveMessage = {
-          chat: `${user.name} left this room`,
-          user: { id: null, name: "system" },
-        };
-        socket.broadcast.to(user.room.toString()).emit("message", leaveMessage); // socket.broadcast의 경우 io.to()와 달리,나를 제외한 채팅방에 모든 맴버에게 메세지를 보낸다 
-        io.emit("rooms", await roomController.getAllRooms());
-        socket.leave(user.room.toString()); // join했던 방을 떠남 
-        cb({ ok: true });
+        const user = await userController.checkUser(socket.id);
+        
+        // 유저가 이미 방에 속해있는지 확인 후 나가기
+        if (user.room && user.room.toString() === rid) {
+          await roomController.leaveRoom(user);
+          
+          const leaveMessage = {
+            chat: `${user.name} left this room`,
+            user: { id: null, name: "system" },
+          };
+          
+          // 자신을 제외한 모든 사용자에게 메시지 전송
+          socket.broadcast.to(user.room.toString()).emit("message", leaveMessage);
+          
+          // 모든 방 정보를 업데이트하여 전송
+          io.emit("rooms", await roomController.getAllRooms());
+          
+          // 소켓에서 방을 떠남
+          socket.leave(user.room.toString());
+          
+          // 유저의 방 정보를 초기화
+          user.room = null;
+    
+          cb({ ok: true });
+        } else {
+          cb({ ok: false, error: "User is not in this room." });
+        }
       } catch (error) {
-        cb({ ok: false, message: error.message });
+        cb({ ok: false, error: error.message });
       }
     });
 
     // 메시지 전송 이벤트 핸들러
-    socket.on("sendMessage", async (message, cb) => {
+    socket.on("sendMessage", async (receivedMessage, cb) => {
       try {
         const user = await userController.checkUser(socket.id);
         
