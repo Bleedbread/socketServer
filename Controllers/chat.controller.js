@@ -3,15 +3,16 @@ const chatController ={}
 
 chatController.saveChat = async (message, user) => {
     try {
-      const newMessage = new Chat({
+      const newChat = new Chat({
         chat: message,
         user: {
           id: user._id,
           name: user.name,
         },
+        room: user.room,
       });
   
-      const savedMessage = await newMessage.save();
+      const savedMessage = await newChat.save();
       console.log("Saved message:", savedMessage); // savedMessage를 로그로 출력
   
       return savedMessage;
