@@ -1,4 +1,4 @@
-const User = require("../Models/user"); // User 모델 임포트
+const User = require("../Models/User"); // User 모델 임포트
 const userController = {};
 
 userController.saveUser = async (userName, sid) => {
