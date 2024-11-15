@@ -14,6 +14,7 @@ userController.saveUser = async (userName, sid) => {
         token: sid,
         online: true,
       });
+      await user.save();
     } else {
       // 기존 사용자 업데이트
       const shouldSave = user.token !== sid || !user.online;
