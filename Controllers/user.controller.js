@@ -1,4 +1,4 @@
-const User = require("../Models/User"); // User 모델 임포트
+const User = require("../Models/User"); 
 const userController = {};
 
 // 사용자 저장 또는 업데이트
