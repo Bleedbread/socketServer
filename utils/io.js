@@ -40,6 +40,9 @@ module.exports = function (io) {
         user.room = rid;
         await user.save();
 
+        // 읽지 않은 메시지 수 초기화
+        await roomController.resetUnreadCount(rid, user);
+
         socket.join(rid); // Socket.io 방에 조인
         const welcomeMessage = {
           chat: `${user.name} is joined to this room`,
@@ -57,13 +60,8 @@ module.exports = function (io) {
     //방 나가기 설정
     socket.on("leaveRoom", async (rid, cb) => {
       try {
-        console.log(
-          `leaveRoom event received for room: ${rid}, socket: ${socket.id}`
-        );
         const user = await userController.checkUser(socket.id);
-        console.log("user retrieved.", user.name);
 
-        // 유저가 이미 방에 속해있는지 확인 후 나가기
         if (user.room && user.room.toString() === rid) {
           await roomController.leaveRoom(user);
 
@@ -72,27 +70,27 @@ module.exports = function (io) {
             user: { id: null, name: "system" },
           };
 
-          // 자신을 제외한 모든 사용자에게 메시지 전송
-          socket.broadcast
-            .to(user.room.toString())
-            .emit("message", leaveMessage);
+          socket.broadcast.to(user.room.toString()).emit("message", leaveMessage);
 
-          // 모든 방 정보를 업데이트하여 전송
           io.emit("rooms", await roomController.getAllRooms());
 
-          // 소켓에서 방을 떠남
           socket.leave(user.room.toString());
 
-          // 유저의 방 정보를 초기화
           user.room = null;
           await user.save();
 
-          cb({ ok: true });
+          if (typeof cb === "function") {
+            cb({ ok: true });
+          }
         } else {
-          cb({ ok: false, error: "User is not in this room." });
+          if (typeof cb === "function") {
+            cb({ ok: false, error: "User is not in this room." });
+          }
         }
       } catch (error) {
-        cb({ ok: false, error: error.message });
+        if (typeof cb === "function") {
+          cb({ ok: false, error: error.message });
+        }
       }
     });
 
